@@ -10,7 +10,9 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 
 public class AI2048 {
 
-	public static class XorShift {
+	static final boolean gui = false;
+
+	class XorShift {
 		private long x, y, z, w;
 
 		{
@@ -31,10 +33,34 @@ public class AI2048 {
 	}
 
 	public static void main(String[] args) {
-		try {
-			new AI2048().solve();
-		} catch (Exception e) {
-			e.printStackTrace();
+		if (gui) {
+			try {
+				new AI2048().solve();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} else {
+			new AI2048().test();
+		}
+	}
+
+	void test() {
+		final int n = 100;
+		int sum = 0;
+		for (int x = 0; x < n; x++) {
+			state state = new state();
+			while (state.putTile()) {
+				Arrow a = solve(Arrays.copyOf(state.board, 16));
+				if (a == null) {
+					break;
+				}
+				state.step(a);
+			}
+			state.print();
+			System.out.println("score : " + state.score);
+
+			sum += state.score;
+			System.out.println("average : " + (double) sum / (x + 1));
 		}
 	}
 
@@ -55,7 +81,7 @@ public class AI2048 {
 	WebDriver driver;
 	WebElement body, tileContainer, keep;
 
-	public void solve() throws Exception {
+	void solve() throws Exception {
 		driver = new FirefoxDriver();
 		driver.get("http://gabrielecirulli.github.io/2048/");
 		body = driver.findElement(By.tagName("body"));
@@ -75,7 +101,7 @@ public class AI2048 {
 		// driver.quit();
 	}
 
-	public Arrow think() {
+	Arrow think() {
 		int board[] = new int[16];
 		{// setTile
 			for (WebElement tile : tileContainer.findElements(By.className("tile"))) {
@@ -86,6 +112,10 @@ public class AI2048 {
 				board[y * 4 + x] = value;
 			}
 		}
+		return solve(board);
+	}
+
+	Arrow solve(int board[]) {
 		Arrow res = null;
 		int value = Integer.MIN_VALUE;
 		for (Arrow arrow : Arrow.values()) {
@@ -98,42 +128,45 @@ public class AI2048 {
 				}
 			}
 		}
-		System.out.println(res);
 		return res;
 	}
 
-	public int dfs(state board, int depth) {
+	int dfs(state board, int depth) {
 		int value = 0;
-		for (int i = 0; i < 3; i++) {
+		for (int i = 0; i < 4; i++) {
 			state tmp = new state(board);
-			tmp.putTile();
-			int tmpValue = 0;
-			for (Arrow arrow : Arrow.values()) {
-				state next = new state(tmp);
-				if (next.step(arrow)) {
-					tmpValue = Math.max(tmpValue, (depth == 0 ? next.value : dfs(next, depth - 1)));
+			if (tmp.putTile()) {
+				int tmpValue = 0;
+				for (Arrow arrow : Arrow.values()) {
+					state next = new state(tmp);
+					if (next.step(arrow)) {
+						tmpValue = Math.max(tmpValue, (depth == 0 ? next.score : dfs(next, depth - 1)));
+					}
 				}
+				value += tmpValue;
 			}
-			value += tmpValue;
 		}
 		return value;
 	}
 
 	class state {
 		int board[];
-		int value;
+		int score = 0;
+
+		public state() {
+			board = new int[16];
+		}
 
 		public state(int board[]) {
 			this.board = Arrays.copyOf(board, 16);
-			value = 0;
 		}
 
 		public state(state s) {
 			board = Arrays.copyOf(s.board, 16);
-			value = s.value;
+			score = s.score;
 		}
 
-		public void putTile() {
+		public boolean putTile() {
 			int vi[] = new int[16];
 			int index = 0;
 			for (int i = 0; i < 16; i++) {
@@ -142,8 +175,21 @@ public class AI2048 {
 					index++;
 				}
 			}
+			if (index == 0)
+				return false;
 			index = random.next() % index;
 			board[vi[index]] = (random.next() % 10 == 0 ? 4 : 2);
+			return true;
+		}
+
+		public void print() {
+			for (int i = 0; i < 4; i++) {
+				for (int j = 0; j < 4; j++) {
+					System.out.print(String.format("%5d", board[i * 4 + j]));
+				}
+				System.out.println();
+			}
+			System.out.println();
 		}
 
 		public boolean step(Arrow arrow) {
@@ -163,7 +209,7 @@ public class AI2048 {
 									board[index + i] <<= 1;
 									board[i + j] = 0;
 									ok = true;
-									value += board[index + i] * board[index + i];
+									score += board[index + i];
 									index += 4;
 									break;
 								}
@@ -187,7 +233,7 @@ public class AI2048 {
 									board[index + i] <<= 1;
 									board[i + j] = 0;
 									ok = true;
-									value += board[index + i] * board[index + i];
+									score += board[index + i];
 									index -= 4;
 									break;
 								}
@@ -211,7 +257,7 @@ public class AI2048 {
 									board[index + i] <<= 1;
 									board[i + j] = 0;
 									ok = true;
-									value += board[index + i] * board[index + i];
+									score += board[index + i];
 									index--;
 									break;
 								}
@@ -235,7 +281,7 @@ public class AI2048 {
 									board[index + i] <<= 1;
 									board[i + j] = 0;
 									ok = true;
-									value += board[index + i] * board[index + i];
+									score += board[index + i];
 									index++;
 									break;
 								}
