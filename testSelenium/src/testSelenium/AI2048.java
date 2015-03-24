@@ -184,14 +184,15 @@ public class AI2048 {
 				{
 					state tmp = new state(board);
 					tmp.board[i] = 1;
-					int tmpValue = 0;
+					int tmpValue = Integer.MIN_VALUE / 4;
 					for (Arrow arrow : Arrow.values()) {
 						state next = new state(tmp);
 						if (next.step(arrow)) {
-							tmpValue = Math.max(tmpValue, (depth == 0 ? next.score : dfs(next, depth - 1)));
+							tmpValue = Math.max(tmpValue,
+									(depth == 0 ? next.score + next.testValue() : dfs(next, depth - 1)));
 						}
 					}
-					value += tmpValue * 9;
+					value += tmpValue;
 				}
 				//				{
 				//					state tmp = new state(board);
@@ -368,6 +369,19 @@ public class AI2048 {
 				}
 			}
 			return ok;
+		}
+
+		int testValue() {
+			int value = 0;
+			for (int i = 0; i < nn - 1; i++) {
+				if (i / 4 < 3) {
+					value -= Math.abs(board[i] - board[i + 4]);
+				}
+				if (i % 4 < 3) {
+					value -= Math.abs(board[i] - board[i + 1]);
+				}
+			}
+			return value;
 		}
 
 		long hash() {
