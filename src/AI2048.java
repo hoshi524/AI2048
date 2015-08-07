@@ -1,5 +1,3 @@
-package testSelenium;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -69,12 +67,11 @@ public class AI2048 {
 				state.step(a);
 			}
 			state.print();
-
-			System.out.println("time : " + (System.nanoTime() - start) / 1000);
-			System.out.println("score : " + state.score);
-
 			sum += state.score;
-			System.out.println("average : " + (double) sum / (x + 1));
+
+			System.out.println("time	: " + (System.nanoTime() - start) / 1000);
+			System.out.println("score	: " + state.score);
+			System.out.println("average	: " + (double) sum / (x + 1));
 		}
 	}
 
