@@ -54,7 +54,7 @@ public class AI2048 {
 
 	void test() {
 		final int n = 100;
-		int sum = 0;
+		int sum = 0, best = 0;
 		for (int x = 0; x < n; ++x) {
 			state state = new state();
 			long start = System.nanoTime();
@@ -67,10 +67,12 @@ public class AI2048 {
 			}
 			state.print();
 			sum += state.score;
+			best = Math.max(best, state.score);
 
 			System.out.println("time	: " + (System.nanoTime() - start) / 1000 / 1000);
 			System.out.println("score	: " + state.score);
 			System.out.println("average	: " + (double) sum / (x + 1));
+			System.out.println("best	: " + best);
 		}
 	}
 
@@ -140,7 +142,7 @@ public class AI2048 {
 		return solve(board);
 	}
 
-	static final int map_depth = 3;
+	static final int map_depth = 4;
 	@SuppressWarnings("unchecked")
 	HashMap<Long, Integer> memo[] = new HashMap[map_depth + 1];
 	{
@@ -157,7 +159,7 @@ public class AI2048 {
 		for (Arrow arrow : Arrow.values()) {
 			state tmp = new state(board);
 			if (tmp.step(arrow)) {
-				int tmpValue = dfs(tmp, map_depth);
+				int tmpValue = dfs(tmp, tmp.empty() < 6 ? map_depth : map_depth - 1);
 				if (value < tmpValue) {
 					value = tmpValue;
 					res = arrow;
@@ -181,7 +183,7 @@ public class AI2048 {
 				for (Arrow arrow : Arrow.values()) {
 					state next = new state(tmp);
 					if (next.step(arrow)) {
-						tmpValue = Math.max(tmpValue, (depth == 0 ? next.score + next.testValue() : dfs(next, depth - 1)));
+						tmpValue = Math.max(tmpValue, (depth == 0 ? next.score + next.value() : dfs(next, depth - 1)));
 					}
 				}
 				value += tmpValue;
@@ -332,7 +334,14 @@ public class AI2048 {
 			return ok;
 		}
 
-		int testValue() {
+		int empty() {
+			int res = 0;
+			for (int i = 0; i < nn; ++i)
+				if (board[i] == 0) ++res;
+			return res;
+		}
+
+		int value() {
 			int value = 0;
 			for (int i = 0; i < 3; ++i) {
 				value += Math.abs(board[i] - board[i + 1]);
