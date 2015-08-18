@@ -27,7 +27,11 @@ public class AI2048 {
 			y = z;
 			z = w;
 			w = (w ^ w >>> 19 ^ t ^ t >>> 8);
-			return (int) w & ((1 << 31) - 1);
+			return (int) w;
+		}
+
+		int nextAbs() {
+			return Math.abs(next());
 		}
 
 		long nextLong() {
@@ -36,7 +40,7 @@ public class AI2048 {
 			y = z;
 			z = w;
 			w = (w ^ w >>> 19 ^ t ^ t >>> 8);
-			return w & ((1 << 31) - 1);
+			return w;
 		}
 	}
 
@@ -179,12 +183,10 @@ public class AI2048 {
 				++count;
 				state tmp = new state(board);
 				tmp.board[i] = 1;
-				int tmpValue = Integer.MIN_VALUE >> 6;
+				int tmpValue = Integer.MIN_VALUE >> 8;
 				for (Arrow arrow : Arrow.values()) {
 					state next = new state(tmp);
-					if (next.step(arrow)) {
-						tmpValue = Math.max(tmpValue, (depth == 0 ? next.score + next.value() : dfs(next, depth - 1)));
-					}
+					if (next.step(arrow)) tmpValue = Math.max(tmpValue, (depth == 0 ? next.score + next.value() : dfs(next, depth - 1)));
 				}
 				value += tmpValue;
 			}
@@ -218,7 +220,7 @@ public class AI2048 {
 				if (board[i] == 0) vi[index++] = i;
 			}
 			if (index == 0) return false;
-			board[vi[random.next() % index]] = (random.next() % 10 == 0 ? 2 : 1);
+			board[vi[random.nextAbs() % index]] = (random.nextAbs() % 10 == 0 ? 2 : 1);
 			return true;
 		}
 
@@ -344,12 +346,12 @@ public class AI2048 {
 		int value() {
 			int value = 0;
 			for (int i = 0; i < 3; ++i) {
-				value += Math.abs(board[i] - board[i + 1]);
+				value += Math.abs(board[i + 0] - board[i + 0 + 1]);
 				value += Math.abs(board[i + 4] - board[i + 4 + 1]);
 				value += Math.abs(board[i + 8] - board[i + 8 + 1]);
 				value += Math.abs(board[i + 12] - board[i + 12 + 1]);
 
-				value += Math.abs(board[i * 4] - board[i * 4 + 4]);
+				value += Math.abs(board[i * 4 + 0] - board[i * 4 + 0 + 4]);
 				value += Math.abs(board[i * 4 + 1] - board[i * 4 + 1 + 4]);
 				value += Math.abs(board[i * 4 + 2] - board[i * 4 + 2 + 4]);
 				value += Math.abs(board[i * 4 + 3] - board[i * 4 + 3 + 4]);
